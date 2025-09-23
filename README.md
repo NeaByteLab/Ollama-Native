@@ -29,11 +29,12 @@
 
 ## ✨ Features
 
-- ✅ **Zero Dependencies** - No bloat, just pure functionality
-- ✅ **TypeScript Native** - Built-in type safety vs JavaScript
-- ✅ **Smart Retry Logic** - Automatic retry with exponential backoff
-- ✅ **Better Error Handling** - Clear error messages with context
-- ✅ **More Features** - Even includes undocumented endpoints!
+- 🎯 TypeScript Support - Built with TypeScript for type safety
+- 🔄 Retry Mechanism - Automatic retry with exponential backoff
+- ⏱️ Request Timeouts - Configurable timeout handling
+- 🛡️ Error Management - Structured error handling with context
+- 🚀 No Dependencies - Zero external dependencies
+- 🔧 Configuration Options - Customizable headers, timeouts, and retries
 
 ---
 
