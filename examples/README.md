@@ -16,6 +16,12 @@ This directory contains examples showing how to use the Ollama Native library.
 - **`abort-manual.ts`** - Manual request abortion using the abort() method
 - **`abort-timing.ts`** - Timing-based request abortion with setTimeout
 
+## 🌐 Web API Examples
+
+### Web Features
+- **`web-fetch.ts`** - Web content fetching using OLLAMA_API_KEY
+- **`web-search.ts`** - Web search functionality using OLLAMA_API_KEY
+
 ## ▶️ Running Examples
 
 1. 🔌 Ensure Ollama is running on `http://localhost:11434`
@@ -27,12 +33,18 @@ This directory contains examples showing how to use the Ollama Native library.
    ```
 3. 🏃 Run examples:
    ```bash
+   # API Generation Examples
    npx tsx examples/api-generate/basic.ts
    npx tsx examples/api-generate/fill-in-middle.ts
    npx tsx examples/api-generate/thinking-bool.ts
    npx tsx examples/api-generate/thinking-gpt.ts
    npx tsx examples/api-generate/abort-manual.ts
    npx tsx examples/api-generate/abort-timing.ts
+
+   # Web API Examples (requires OLLAMA_API_KEY)
+   export OLLAMA_API_KEY=your_api_key
+   npx tsx examples/api-web/web-fetch.ts
+   npx tsx examples/api-web/web-search.ts
    ```
 
 ### 🔄 Retry Mechanism
