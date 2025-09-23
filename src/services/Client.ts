@@ -18,11 +18,15 @@ import type {
   ResponseChat,
   ResponseChatStream,
   ResponseGenerate,
-  ResponseGenerateStream
+  ResponseGenerateStream,
+  WebFetchRequest,
+  WebFetchResponse,
+  WebSearchRequest,
+  WebSearchResponse
 } from '@interfaces/index'
-import { apiEndpoints } from '@constants/index'
+import { ollamaBase, apiEndpoints } from '@constants/index'
 import { FetchClient } from '@services/Fetch'
-import { errorHandler } from '@utils/index'
+import { errorHandler, isValidURL } from '@utils/index'
 
 /**
  * Low-level Ollama client for HTTP communication.
@@ -31,6 +35,8 @@ import { errorHandler } from '@utils/index'
 export class OllamaClient {
   /** The fetch client for making HTTP requests */
   private readonly fetchClient: FetchClient
+  /** The configuration for the Ollama client */
+  private readonly config: OllamaConfig
 
   /**
    * Creates a new OllamaClient instance.
@@ -38,6 +44,7 @@ export class OllamaClient {
    * @param config - The configuration for the Ollama client
    */
   constructor(config: OllamaConfig) {
+    this.config = config
     this.fetchClient = new FetchClient(config)
   }
 
@@ -250,5 +257,53 @@ export class OllamaClient {
    */
   async show(request: ModelShowRequest): Promise<ModelShowResponse> {
     return this.fetchClient.post<ModelShowResponse>(apiEndpoints['show'] ?? '', request)
+  }
+
+  /**
+   * Fetches a single page using the Ollama web fetch API.
+   * @description Retrieves content from a URL using Ollama's web fetch service.
+   * @param request - The fetch request containing a URL
+   * @returns Promise that resolves to the fetch result
+   * @throws {Error} When the request is invalid or the server returns an error
+   */
+  async webFetch(request: WebFetchRequest): Promise<WebFetchResponse> {
+    if (!isValidURL(request.url)) {
+      errorHandler(
+        new Error('Invalid URL: must be a valid HTTP/HTTPS URL'),
+        'OllamaClient.webFetch()'
+      )
+    }
+    const webConfig: OllamaConfig = {
+      host: ollamaBase,
+      ...this.config.headers !== undefined && { headers: this.config.headers },
+      ...this.config.timeout !== undefined && { timeout: this.config.timeout },
+      ...this.config.retries !== undefined && { retries: this.config.retries }
+    }
+    const webFetchClient: FetchClient = new FetchClient(webConfig)
+    return webFetchClient.post<WebFetchResponse>('/web_fetch', request)
+  }
+
+  /**
+   * Performs web search using the Ollama web search API.
+   * @description Searches the web using Ollama's web search service.
+   * @param request - The search request containing query and options
+   * @returns Promise that resolves to the search results
+   * @throws {Error} When the request is invalid or the server returns an error
+   */
+  async webSearch(request: WebSearchRequest): Promise<WebSearchResponse> {
+    if (!request.query || request.query.length === 0) {
+      errorHandler(
+        new Error('Invalid query: must be a non-empty string'),
+        'OllamaClient.webSearch()'
+      )
+    }
+    const webConfig: OllamaConfig = {
+      host: ollamaBase,
+      ...this.config.headers !== undefined && { headers: this.config.headers },
+      ...this.config.timeout !== undefined && { timeout: this.config.timeout },
+      ...this.config.retries !== undefined && { retries: this.config.retries }
+    }
+    const webFetchClient: FetchClient = new FetchClient(webConfig)
+    return webFetchClient.post<WebSearchResponse>('/web_search', request)
   }
 }

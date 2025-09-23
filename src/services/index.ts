@@ -17,7 +17,11 @@ import type {
   ResponseGenerateStream,
   RequestChat,
   ResponseChat,
-  ResponseChatStream
+  ResponseChatStream,
+  WebFetchRequest,
+  WebFetchResponse,
+  WebSearchRequest,
+  WebSearchResponse
 } from '@interfaces/index'
 import { OllamaClient } from './Client'
 import { isValidConfig } from '@utils/index'
@@ -200,5 +204,27 @@ export class OllamaService {
    */
   show(request: ModelShowRequest): Promise<ModelShowResponse> {
     return this.client.show(request)
+  }
+
+  /**
+   * Fetches a single page using the Ollama web fetch API.
+   * @description Retrieves content from a URL using Ollama's web fetch service.
+   * @param request - The fetch request containing a URL
+   * @returns Promise that resolves to the fetch result
+   * @throws {Error} When the request is invalid or the server returns an error
+   */
+  webFetch(request: WebFetchRequest): Promise<WebFetchResponse> {
+    return this.client.webFetch(request)
+  }
+
+  /**
+   * Performs web search using the Ollama web search API.
+   * @description Searches the web using Ollama's web search service.
+   * @param request - The search request containing query and options
+   * @returns Promise that resolves to the search results
+   * @throws {Error} When the request is invalid or the server returns an error
+   */
+  webSearch(request: WebSearchRequest): Promise<WebSearchResponse> {
+    return this.client.webSearch(request)
   }
 }

@@ -85,7 +85,11 @@ import {
   ResponseGenerate,
   ResponseGenerateStream,
   ToolCall,
-  ToolItems
+  ToolItems,
+  WebFetchRequest,
+  WebFetchResponse,
+  WebSearchRequest,
+  WebSearchResponse
 } from '@neabyte/ollama-native'
 
 // Basic configuration
@@ -173,17 +177,9 @@ const running = await ollama.ps()
 console.log('Running models:', running)
 ```
 
-## 📊 **Comparison: Ollama-Native vs Official**
+## 💡 **More Examples**
 
-| Feature | Ollama-Native | Official ollama-js |
-|---------|---------------|-------------------|
-| **Dependencies** | ✅ Zero | ❌ Has dependencies |
-| **TypeScript** | ✅ Native | ❌ JavaScript only |
-| **Retry Logic** | ✅ Built-in | ❌ Manual |
-| **Error Handling** | ✅ Structured | ❌ Basic |
-| **API Coverage** | ✅ 100% + extras | ✅ 100% |
-| **Bundle Size** | ✅ Tiny | ❌ Larger |
-| **Learning Curve** | ✅ Easy | ❌ Steeper |
+See [`./examples`](./examples/README.md) for complete code examples and usage patterns.
 
 ---
 
@@ -394,6 +390,29 @@ ollama.show(request)
   - `options` `<Record<string, unknown>>`: (Optional) Options to configure the runtime.
 - Returns: `Promise<ModelShowResponse>`
 - Description: Shows model information and configuration including license, system prompt, template, and parameters.
+
+### webFetch
+
+```typescript
+ollama.webFetch(request)
+```
+
+- `request` `<WebFetchRequest>`: The fetch request parameters.
+  - `url` `<string>`: The URL to fetch content from.
+- Returns: `Promise<WebFetchResponse>`
+- Description: Fetches a single page using the Ollama web fetch API. Requires API key authentication.
+
+### webSearch
+
+```typescript
+ollama.webSearch(request)
+```
+
+- `request` `<WebSearchRequest>`: The search request parameters.
+  - `query` `<string>`: The search query string.
+  - `max_results` `<number>`: (Optional) Maximum number of results to return.
+- Returns: `Promise<WebSearchResponse>`
+- Description: Performs web search using the Ollama web search API. Requires API key authentication.
 
 ---
 
