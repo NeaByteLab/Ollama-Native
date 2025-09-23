@@ -274,4 +274,137 @@ export class FetchClient {
   get isActive(): boolean {
     return this.currentController !== null
   }
+
+  /**
+   * Makes a streaming POST request to the specified endpoint.
+   * @description Convenience method for streaming POST requests with data.
+   * @param endpoint - The API endpoint path
+   * @param data - The data to send in the request body
+   * @param options - Optional request configuration
+   * @returns Promise that resolves to an async iterator of streaming responses
+   * @throws {Error} When the request fails or times out
+   */
+  async postStream<T = unknown>(
+    endpoint: string,
+    data?: unknown,
+    options: Omit<FetchOptions, 'method'> = {}
+  ): Promise<AsyncIterable<T>> {
+    const { headers = {}, timeout = this.config.timeout }: Omit<FetchOptions, 'method'> = options
+    this.currentController = new AbortController()
+    this.currentController.setTimeout(timeout)
+    const url: string = `${this.config.host}${endpoint}`
+    const requestHeaders: Record<string, string> = { ...this.config.headers, ...headers }
+    const fetchOptions: RequestInit = {
+      method: 'POST',
+      headers: requestHeaders,
+      signal: this.currentController.signal
+    }
+    if (data !== undefined) {
+      fetchOptions.body = JSON.stringify(data)
+    }
+    try {
+      const response: Response = await fetch(url, fetchOptions)
+      if (!response.ok) {
+        this.cleanupController()
+        errorHandler(
+          new Error(`HTTP ${response.status}: ${response.statusText}`),
+          `FetchClient.postStream() -> ${url}`
+        )
+        return this.createEmptyIterator<T>()
+      }
+      if (!response.body) {
+        this.cleanupController()
+        errorHandler(new Error('Response body is null'), `FetchClient.postStream() -> ${url}`)
+        return this.createEmptyIterator<T>()
+      }
+      return this.createStreamIterator<T>(response.body)
+    } catch (error: unknown) {
+      this.cleanupController()
+      errorHandler(error, `FetchClient.postStream() -> ${url}`)
+      return this.createEmptyIterator<T>()
+    }
+  }
+
+  /**
+   * Creates an empty async iterator for error cases.
+   * @description Returns an empty async iterator when streaming fails.
+   * @returns Empty async iterator
+   */
+  private async *createEmptyIterator<T>(): AsyncIterableIterator<T> {
+    // Empty iterator - no items to yield
+  }
+
+  /**
+   * Creates an async iterator from a ReadableStream for streaming responses.
+   * @description Parses streaming JSON responses line by line with abort support.
+   * @param body - The response body ReadableStream
+   * @returns Async iterator that yields parsed JSON objects
+   */
+  private async *createStreamIterator<T>(
+    body: ReadableStream<Uint8Array>
+  ): AsyncIterableIterator<T> {
+    const reader: ReadableStreamDefaultReader<Uint8Array> = body.getReader()
+    const decoder: TextDecoder = new TextDecoder()
+    let buffer: string = ''
+    try {
+      while (true) {
+        if (this.shouldAbortStream()) {
+          break
+        }
+        const { done, value }: ReadableStreamReadResult<Uint8Array> = await reader.read()
+        if (done) {
+          break
+        }
+        buffer += decoder.decode(value, { stream: true })
+        const lines: string[] = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const parsed of this.processStreamLines<T>(lines)) {
+          yield parsed
+        }
+      }
+      if (buffer.trim() !== '') {
+        try {
+          const parsed: T = JSON.parse(buffer.trim()) as T
+          yield parsed
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+    } finally {
+      reader.releaseLock()
+      this.cleanupController()
+    }
+  }
+
+  /**
+   * Checks if the stream should be aborted.
+   * @description Determines if the current request should be aborted.
+   * @returns True if the stream should be aborted, false otherwise
+   */
+  private shouldAbortStream(): boolean {
+    if (this.currentController === null) {
+      return false
+    }
+    return this.currentController.signal.aborted
+  }
+
+  /**
+   * Processes stream lines and yields parsed JSON objects.
+   * @description Parses and yields JSON objects from stream lines.
+   * @param lines - Array of lines to process
+   */
+  private *processStreamLines<T>(lines: string[]): IterableIterator<T> {
+    for (const line of lines) {
+      const trimmedLine: string = line.trim()
+      if (trimmedLine === '') {
+        continue
+      }
+      try {
+        const parsed: T = JSON.parse(trimmedLine) as T
+        yield parsed
+      } catch {
+        continue
+      }
+    }
+  }
 }

@@ -18,4 +18,6 @@ export interface OllamaConfig {
  * @description Re-export all interfaces from their respective files.
  */
 export * from '@interfaces/Model'
+export * from '@interfaces/Request'
+export * from '@interfaces/Response'
 export * from '@interfaces/Tool'
