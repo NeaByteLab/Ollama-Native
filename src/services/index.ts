@@ -56,24 +56,13 @@ export class OllamaService {
 
   /**
    * Chat completion with tool calling support.
-   * @description Sends a chat request to the Ollama server and returns the complete response.
+   * @description Sends a chat request to the Ollama server with optional streaming.
    * @param request - The chat request parameters
-   * @returns Promise that resolves to the chat response
+   * @returns Promise that resolves to chat response or async iterator of streaming responses
    * @throws {Error} When the request fails or times out
    */
-  chat(request: RequestChat): Promise<ResponseChat> {
+  chat(request: RequestChat): Promise<ResponseChat | AsyncIterable<ResponseChatStream>> {
     return this.client.chat(request)
-  }
-
-  /**
-   * Chat completion with streaming and tool calling support.
-   * @description Sends a streaming chat request to the Ollama server and returns an async iterator.
-   * @param request - The chat request parameters (stream will be forced to true)
-   * @returns Promise that resolves to an async iterator of streaming chat responses
-   * @throws {Error} When the request fails or times out
-   */
-  chatStream(request: Omit<RequestChat, 'stream'>): Promise<AsyncIterable<ResponseChatStream>> {
-    return this.client.chatStream(request)
   }
 
   /**
@@ -91,10 +80,10 @@ export class OllamaService {
    * Creates a new model from a base model.
    * @description Creates a custom model with specified parameters, quantization, and configuration.
    * @param request - The create request parameters
-   * @returns Promise that resolves to an async iterator of progress updates
+   * @returns Promise that resolves to an async iterator of progress updates or status response
    * @throws {Error} When the request fails or times out
    */
-  create(request: ModelCreateRequest): Promise<AsyncIterable<ModelProgress>> {
+  create(request: ModelCreateRequest): Promise<AsyncIterable<ModelProgress> | ModelStatusResponse> {
     return this.client.create(request)
   }
 
@@ -122,26 +111,15 @@ export class OllamaService {
 
   /**
    * Generates text using the specified Ollama model.
-   * @description Sends a generation request to the Ollama server and returns the complete response.
+   * @description Sends a generation request to the Ollama server with optional streaming.
    * @param request - The generation request parameters
-   * @returns Promise that resolves to the generation response
+   * @returns Promise that resolves to generation response or async iterator of streaming responses
    * @throws {Error} When the request fails or times out
    */
-  generate(request: RequestGenerate): Promise<ResponseGenerate> {
+  generate(
+    request: RequestGenerate
+  ): Promise<ResponseGenerate | AsyncIterable<ResponseGenerateStream>> {
     return this.client.generate(request)
-  }
-
-  /**
-   * Generates text using the specified Ollama model with streaming response.
-   * @description Sends a streaming generation request to the Ollama server and returns an async iterator.
-   * @param request - The generation request parameters (stream will be forced to true)
-   * @returns Promise that resolves to an async iterator of streaming responses
-   * @throws {Error} When the request fails or times out
-   */
-  generateStream(
-    request: Omit<RequestGenerate, 'stream'>
-  ): Promise<AsyncIterable<ResponseGenerateStream>> {
-    return this.client.generateStream(request)
   }
 
   /**
@@ -175,23 +153,23 @@ export class OllamaService {
 
   /**
    * Pulls a model from the Ollama registry.
-   * @description Downloads a model from the registry with streaming progress updates.
+   * @description Downloads a model from the registry with optional streaming progress updates.
    * @param request - The pull request parameters
-   * @returns Promise that resolves to an async iterator of progress updates
+   * @returns Promise that resolves to an async iterator of progress updates or status response
    * @throws {Error} When the request fails or times out
    */
-  pull(request: ModelPullRequest): Promise<AsyncIterable<ModelProgress>> {
+  pull(request: ModelPullRequest): Promise<AsyncIterable<ModelProgress> | ModelStatusResponse> {
     return this.client.pull(request)
   }
 
   /**
    * Pushes a model to the Ollama registry.
-   * @description Uploads a model to the registry with streaming progress updates.
+   * @description Uploads a model to the registry with optional streaming progress updates.
    * @param request - The push request parameters
-   * @returns Promise that resolves to an async iterator of progress updates
+   * @returns Promise that resolves to an async iterator of progress updates or status response
    * @throws {Error} When the request fails or times out
    */
-  push(request: ModelPushRequest): Promise<AsyncIterable<ModelProgress>> {
+  push(request: ModelPushRequest): Promise<AsyncIterable<ModelProgress> | ModelStatusResponse> {
     return this.client.push(request)
   }
 

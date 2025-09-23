@@ -27,22 +27,13 @@
   </a>
 </div>
 
-## ✨ Why Choose Ollama-Native?
+## ✨ Features
 
-### 🚀 **Better Than Official Library**
 - ✅ **Zero Dependencies** - No bloat, just pure functionality
 - ✅ **TypeScript Native** - Built-in type safety vs JavaScript
 - ✅ **Smart Retry Logic** - Automatic retry with exponential backoff
 - ✅ **Better Error Handling** - Clear error messages with context
 - ✅ **More Features** - Even includes undocumented endpoints!
-
-### 🎯 **What You Get**
-- 💬 **Chat** - Full conversations with AI models
-- ✍️ **Generate** - Create text with any model
-- 🧠 **Embed** - Get vector embeddings for AI
-- 🛠️ **Create** - Build custom models with quantization
-- 📦 **Manage** - Copy, delete, pull, push models
-- 📊 **Monitor** - See running models and progress
 
 ---
 
@@ -124,24 +115,48 @@ try {
 
 ### 💬 **Chat with AI**
 ```typescript
-// Simple chat
+// Non-streaming chat
 const response = await ollama.chat({
   model: 'llama3',
   messages: [
     { role: 'user', content: 'Hello! How are you?' }
-  ]
+  ],
+  stream: false
 })
 console.log(response.message.content) // AI's response
+
+// Streaming chat
+const stream = await ollama.chat({
+  model: 'llama3',
+  messages: [
+    { role: 'user', content: 'Hello! How are you?' }
+  ],
+  stream: true
+})
+for await (const chunk of stream) {
+  console.log(chunk.message?.content || '') // Real-time response
+}
 ```
 
 ### ✍️ **Generate Text**
 ```typescript
-// Generate text
+// Non-streaming generate
 const text = await ollama.generate({
   model: 'llama3',
-  prompt: 'Write a haiku about coding'
+  prompt: 'Write a haiku about coding',
+  stream: false
 })
 console.log(text.response) // Generated haiku
+
+// Streaming generate
+const stream = await ollama.generate({
+  model: 'llama3',
+  prompt: 'Write a haiku about coding',
+  stream: true
+})
+for await (const chunk of stream) {
+  console.log(chunk.response || '') // Real-time generation
+}
 ```
 
 ### 🧠 **Get Embeddings**
@@ -156,12 +171,23 @@ console.log(embeddings.embeddings[0]) // 768-dimensional vector
 
 ### 🛠️ **Create Custom Model**
 ```typescript
-// Create your own model
+// Non-streaming create
+const status = await ollama.create({
+  model: 'my-custom-model',
+  from: 'llama3',
+  quantize: 'q4_K_M',
+  system: 'You are a helpful coding assistant',
+  stream: false
+})
+console.log('Model created:', status.status)
+
+// Streaming create with progress
 const progress = await ollama.create({
   model: 'my-custom-model',
   from: 'llama3',
   quantize: 'q4_K_M',
-  system: 'You are a helpful coding assistant'
+  system: 'You are a helpful coding assistant',
+  stream: true
 })
 
 // Watch creation progress
@@ -211,7 +237,7 @@ ollama.chat(request)
     - `tool_calls` `<ToolCall[]>`: (Optional) Tool calls made by the assistant.
     - `tool_name` `<string>`: (Optional) Add the name of the tool that was executed to inform the model of the result.
   - `format` `<string | object>`: (Optional) Set the expected format of the response (`json`).
-  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned.
+  - `stream` `<boolean>`: (Optional) When true returns `AsyncIterable<ResponseChatStream>`, when false returns `ResponseChat`. Defaults to false.
   - `think` `<boolean | "high" | "medium" | "low">`: (Optional) Enable model thinking. Use `true`/`false` or specify a level. Requires model support.
   - `keep_alive` `<string | number>`: (Optional) How long to keep the model loaded. A number (seconds) or a string with a duration unit suffix ("300ms", "1.5h", "2h45m", etc.)
   - `tools` `<ToolCall[]>`: (Optional) A list of tool calls the model may make.
@@ -220,17 +246,8 @@ ollama.chat(request)
   - `system` `<string>`: (Optional) Override the model system prompt.
   - `template` `<string>`: (Optional) Override the model template.
 
-- Returns: `Promise<ResponseChat>`
-
-### chatStream
-
-```typescript
-ollama.chatStream(request)
-```
-
-- `request` `<Omit<RequestChat, 'stream'>>`: The request object containing chat parameters (stream is automatically set to true).
-- Returns: `Promise<AsyncIterable<ResponseChatStream>>`
-- Description: Chat completion with streaming and tool calling support.
+- Returns: `Promise<ResponseChat | AsyncIterable<ResponseChatStream>>`
+- Description: Chat completion with optional streaming and tool calling support.
 
 ### copy
 
@@ -258,11 +275,11 @@ ollama.create(request)
   - `model` `<string>`: The name of the model to create.
   - `parameters` `<Record<string, unknown>>`: (Optional) Additional model parameters as key-value pairs.
   - `quantize` `<string>`: Quantization precision level (q8_0, q4_K_M, etc.).
-  - `stream` `<boolean>`: (Optional) When true an AsyncGenerator is returned.
+  - `stream` `<boolean>`: (Optional) When true returns `AsyncIterable<ModelProgress>`, when false returns `ModelStatusResponse`. Defaults to true.
   - `system` `<string>`: (Optional) The system prompt for the model.
   - `template` `<string>`: (Optional) The prompt template to use with the model.
-- Returns: `Promise<AsyncIterable<ModelProgress>>`
-- Description: Creates a new model from a base model with streaming progress updates.
+- Returns: `Promise<AsyncIterable<ModelProgress> | ModelStatusResponse>`
+- Description: Creates a new model from a base model with optional streaming progress updates.
 
 ### delete
 
@@ -306,23 +323,14 @@ ollama.generate(request)
   - `raw` `<boolean>`: (Optional) Bypass the prompt template and pass the prompt directly to the model.
   - `images` `<Uint8Array[] | string[]>`: (Optional) Images to be included, either as Uint8Array or base64 encoded strings.
   - `format` `<string | object>`: (Optional) Set the expected format of the response (`json`).
-  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned.
+  - `stream` `<boolean>`: (Optional) When true returns `AsyncIterable<ResponseGenerateStream>`, when false returns `ResponseGenerate`. Defaults to false.
   - `think` `<boolean | "high" | "medium" | "low">`: (Optional) Enable model thinking. Use `true`/`false` or specify a level. Requires model support.
   - `keep_alive` `<string | number>`: (Optional) How long to keep the model loaded. A number (seconds) or a string with a duration unit suffix ("300ms", "1.5h", "2h45m", etc.)
   - `tools` `<ToolCall[]>`: (Optional) A list of tool calls the model may make.
   - `options` `<Partial<RequestOptions>>`: (Optional) Options to configure the runtime.
 
-- Returns: `Promise<ResponseGenerate>`
-
-### generateStream
-
-```typescript
-ollama.generateStream(request)
-```
-
-- `request` `<Omit<RequestGenerate, 'stream'>>`: The request object containing generate parameters (stream is automatically set to true).
-- Returns: `Promise<AsyncIterable<ResponseGenerateStream>>`
-- Description: Generates text using the specified Ollama model with streaming response.
+- Returns: `Promise<ResponseGenerate | AsyncIterable<ResponseGenerateStream>>`
+- Description: Generates text using the specified Ollama model with optional streaming response.
 
 ### isActive
 
@@ -360,9 +368,9 @@ ollama.pull(request)
 - `request` `<ModelPullRequest>`: The pull request parameters.
   - `model` `<string>`: The name of the model to pull from the registry.
   - `insecure` `<boolean>`: (Optional) Pull from servers whose identity cannot be verified.
-  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned for streaming progress.
-- Returns: `Promise<AsyncIterable<ModelProgress>>`
-- Description: Downloads a model from the Ollama registry with streaming progress updates.
+  - `stream` `<boolean>`: (Optional) When true returns `AsyncIterable<ModelProgress>`, when false returns `ModelStatusResponse`. Defaults to true.
+- Returns: `Promise<AsyncIterable<ModelProgress> | ModelStatusResponse>`
+- Description: Downloads a model from the Ollama registry with optional streaming progress updates.
 
 ### push
 
@@ -373,9 +381,9 @@ ollama.push(request)
 - `request` `<ModelPushRequest>`: The push request parameters.
   - `model` `<string>`: The name of the model to push to the registry.
   - `insecure` `<boolean>`: (Optional) Push to servers whose identity cannot be verified.
-  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned for streaming progress.
-- Returns: `Promise<AsyncIterable<ModelProgress>>`
-- Description: Uploads a model to the Ollama registry with streaming progress updates.
+  - `stream` `<boolean>`: (Optional) When true returns `AsyncIterable<ModelProgress>`, when false returns `ModelStatusResponse`. Defaults to true.
+- Returns: `Promise<AsyncIterable<ModelProgress> | ModelStatusResponse>`
+- Description: Uploads a model to the Ollama registry with optional streaming progress updates.
 
 ### show
 

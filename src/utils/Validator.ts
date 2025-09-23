@@ -18,8 +18,16 @@ export function isValidConfig(config: OllamaConfig): boolean {
     errorHandler(new Error('Invalid host URL: must be a valid HTTP/HTTPS URL'), contextStr)
     return false
   }
-  if (config.timeout !== undefined && (typeof config.timeout !== 'number' || config.timeout <= 0)) {
-    errorHandler(new Error('Invalid timeout: must be a positive number'), contextStr)
+  if (
+    config.timeout !== undefined &&
+    (typeof config.timeout !== 'number' ||
+      config.timeout < 1 ||
+      config.timeout > Number.MAX_SAFE_INTEGER)
+  ) {
+    errorHandler(
+      new Error('Invalid timeout: must be between 1 and 9007199254740991 milliseconds'),
+      contextStr
+    )
     return false
   }
   if (config.retries !== undefined && (typeof config.retries !== 'number' || config.retries < 0)) {
@@ -52,6 +60,9 @@ export function isValidURL(url: string): boolean {
       return false
     }
     if (!parsedUrl.hostname || parsedUrl.hostname.length === 0) {
+      return false
+    }
+    if (url.endsWith(':')) {
       return false
     }
     if (parsedUrl.port) {
