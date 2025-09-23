@@ -9,6 +9,8 @@ export const apiEndpoints: Record<string, string> = {
   copy: '/api/copy',
   /** Endpoint for deleting models */
   delete: '/api/delete',
+  /** Endpoint for embedding requests */
+  embed: '/api/embed',
   /** Endpoint for text generation requests */
   generate: '/api/generate',
   /** Endpoint for listing available models */

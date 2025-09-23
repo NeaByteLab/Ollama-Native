@@ -1,4 +1,6 @@
 import type {
+  EmbedRequest,
+  EmbedResponse,
   ModelCopyRequest,
   ModelData,
   ModelDeleteRequest,
@@ -112,6 +114,17 @@ export class OllamaClient {
     return this.fetchClient.delete<ModelStatusResponse>(apiEndpoints['delete'] ?? '', {
       data: { name: request.model }
     })
+  }
+
+  /**
+   * Generates embeddings using the specified Ollama model.
+   * @description Sends an embedding request to the Ollama server and returns the embeddings.
+   * @param request - The embedding request parameters
+   * @returns Promise that resolves to the embedding response
+   * @throws {Error} When the request fails or times out
+   */
+  async embed(request: EmbedRequest): Promise<EmbedResponse> {
+    return this.fetchClient.post<EmbedResponse>(apiEndpoints['embed'] ?? '', request)
   }
 
   /**
