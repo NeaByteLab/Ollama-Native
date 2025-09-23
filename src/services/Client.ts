@@ -2,6 +2,7 @@ import type {
   EmbedRequest,
   EmbedResponse,
   ModelCopyRequest,
+  ModelCreateRequest,
   ModelData,
   ModelDeleteRequest,
   ModelProgress,
@@ -101,6 +102,18 @@ export class OllamaClient {
    */
   async copy(request: ModelCopyRequest): Promise<ModelStatusResponse> {
     return this.fetchClient.post<ModelStatusResponse>(apiEndpoints['copy'] ?? '', request)
+  }
+
+  /**
+   * Creates a new model from a base model.
+   * @description Creates a custom model with specified parameters, quantization, and configuration.
+   * @param request - The create request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  async create(request: ModelCreateRequest): Promise<AsyncIterable<ModelProgress>> {
+    const streamRequest: ModelCreateRequest = { ...request, stream: true }
+    return this.fetchClient.postStream<ModelProgress>(apiEndpoints['create'] ?? '', streamRequest)
   }
 
   /**

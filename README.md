@@ -19,7 +19,7 @@
   <a href="https://www.npmjs.com/package/@neabyte/ollama-native">
     <img alt="npm version" src="https://img.shields.io/npm/v/@neabyte/ollama-native.svg">
   </a>
-  <a href="https://github.com/neabyte/ollama-native/blob/main/LICENSE">
+  <a href="https://github.com/neabytelab/ollama-native/blob/main/LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
   </a>
   <a href="https://www.typescriptlang.org/">
@@ -27,14 +27,22 @@
   </a>
 </div>
 
-## ✨ Features
+## ✨ Why Choose Ollama-Native?
 
-- 🎯 **TypeScript Support** - Built with TypeScript for type safety
-- 🔄 **Retry Mechanism** - Automatic retry with exponential backoff
-- ⏱️ **Request Timeouts** - Configurable timeout handling
-- 🛡️ **Error Management** - Structured error handling with context
-- 🚀 **No Dependencies** - Zero external dependencies
-- 🔧 **Configuration Options** - Customizable headers, timeouts, and retries
+### 🚀 **Better Than Official Library**
+- ✅ **Zero Dependencies** - No bloat, just pure functionality
+- ✅ **TypeScript Native** - Built-in type safety vs JavaScript
+- ✅ **Smart Retry Logic** - Automatic retry with exponential backoff
+- ✅ **Better Error Handling** - Clear error messages with context
+- ✅ **More Features** - Even includes undocumented endpoints!
+
+### 🎯 **What You Get**
+- 💬 **Chat** - Full conversations with AI models
+- ✍️ **Generate** - Create text with any model
+- 🧠 **Embed** - Get vector embeddings for AI
+- 🛠️ **Create** - Build custom models with quantization
+- 📦 **Manage** - Copy, delete, pull, push models
+- 📊 **Monitor** - See running models and progress
 
 ---
 
@@ -51,22 +59,33 @@ npm install @neabyte/ollama-native
 ```typescript
 import { 
   ChatMessage,
+  EmbedRequest,
+  EmbedResponse,
   ModelCopyRequest,
+  ModelCreateRequest,
   ModelData,
   ModelDeleteRequest,
+  ModelDetails,
   ModelProgress,
   ModelPullRequest,
   ModelPushRequest,
+  ModelResponse,
   ModelShowRequest,
   ModelShowResponse,
   ModelStatusResponse,
+  ModelTransferRequest,
   OllamaConfig,
   OllamaService,
   RequestChat,
   RequestGenerate,
+  RequestOptions,
+  RequestThinking,
   ResponseChat,
+  ResponseChatStream,
   ResponseGenerate,
-  ToolCall
+  ResponseGenerateStream,
+  ToolCall,
+  ToolItems
 } from '@neabyte/ollama-native'
 
 // Basic configuration
@@ -96,6 +115,75 @@ try {
   console.error('Failed to fetch models:', error.message)
 }
 ```
+
+## 🎯 **Super Easy Examples**
+
+### 💬 **Chat with AI**
+```typescript
+// Simple chat
+const response = await ollama.chat({
+  model: 'llama3',
+  messages: [
+    { role: 'user', content: 'Hello! How are you?' }
+  ]
+})
+console.log(response.message.content) // AI's response
+```
+
+### ✍️ **Generate Text**
+```typescript
+// Generate text
+const text = await ollama.generate({
+  model: 'llama3',
+  prompt: 'Write a haiku about coding'
+})
+console.log(text.response) // Generated haiku
+```
+
+### 🧠 **Get Embeddings**
+```typescript
+// Get vector embeddings
+const embeddings = await ollama.embed({
+  model: 'nomic-embed-text',
+  input: 'Hello world'
+})
+console.log(embeddings.embeddings[0]) // 768-dimensional vector
+```
+
+### 🛠️ **Create Custom Model**
+```typescript
+// Create your own model
+const progress = await ollama.create({
+  model: 'my-custom-model',
+  from: 'llama3',
+  quantize: 'q4_K_M',
+  system: 'You are a helpful coding assistant'
+})
+
+// Watch creation progress
+for await (const update of progress) {
+  console.log(`Status: ${update.status}`)
+}
+```
+
+### 📊 **Monitor Running Models**
+```typescript
+// See what's currently running
+const running = await ollama.ps()
+console.log('Running models:', running)
+```
+
+## 📊 **Comparison: Ollama-Native vs Official**
+
+| Feature | Ollama-Native | Official ollama-js |
+|---------|---------------|-------------------|
+| **Dependencies** | ✅ Zero | ❌ Has dependencies |
+| **TypeScript** | ✅ Native | ❌ JavaScript only |
+| **Retry Logic** | ✅ Built-in | ❌ Manual |
+| **Error Handling** | ✅ Structured | ❌ Basic |
+| **API Coverage** | ✅ 100% + extras | ✅ 100% |
+| **Bundle Size** | ✅ Tiny | ❌ Larger |
+| **Learning Curve** | ✅ Easy | ❌ Steeper |
 
 ---
 
@@ -159,6 +247,26 @@ ollama.copy(request)
   - `destination` `<string>`: The name of the model to copy to.
 - Returns: `Promise<ModelStatusResponse>`
 - Description: Creates a copy of an existing model with a new name.
+
+### create
+
+```typescript
+ollama.create(request)
+```
+
+- `request` `<ModelCreateRequest>`: The request object containing create parameters.
+  - `adapters` `<Record<string, string>>`: (Optional) A key-value map of LoRA adapter configurations.
+  - `from` `<string>`: The base model to derive from.
+  - `license` `<string | string[]>`: (Optional) The license(s) associated with the model.
+  - `messages` `<ChatMessage[]>`: (Optional) Initial chat messages for the model.
+  - `model` `<string>`: The name of the model to create.
+  - `parameters` `<Record<string, unknown>>`: (Optional) Additional model parameters as key-value pairs.
+  - `quantize` `<string>`: Quantization precision level (q8_0, q4_K_M, etc.).
+  - `stream` `<boolean>`: (Optional) When true an AsyncGenerator is returned.
+  - `system` `<string>`: (Optional) The system prompt for the model.
+  - `template` `<string>`: (Optional) The prompt template to use with the model.
+- Returns: `Promise<AsyncIterable<ModelProgress>>`
+- Description: Creates a new model from a base model with streaming progress updates.
 
 ### delete
 

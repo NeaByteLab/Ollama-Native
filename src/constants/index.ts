@@ -7,6 +7,8 @@ export const apiEndpoints: Record<string, string> = {
   chat: '/api/chat',
   /** Endpoint for copying models */
   copy: '/api/copy',
+  /** Endpoint for creating models */
+  create: '/api/create',
   /** Endpoint for deleting models */
   delete: '/api/delete',
   /** Endpoint for embedding requests */

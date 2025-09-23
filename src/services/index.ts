@@ -8,6 +8,7 @@ import type {
   ModelProgress,
   ModelDeleteRequest,
   ModelCopyRequest,
+  ModelCreateRequest,
   ModelShowRequest,
   ModelStatusResponse,
   ModelShowResponse,
@@ -80,6 +81,17 @@ export class OllamaService {
    */
   copy(request: ModelCopyRequest): Promise<ModelStatusResponse> {
     return this.client.copy(request)
+  }
+
+  /**
+   * Creates a new model from a base model.
+   * @description Creates a custom model with specified parameters, quantization, and configuration.
+   * @param request - The create request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  create(request: ModelCreateRequest): Promise<AsyncIterable<ModelProgress>> {
+    return this.client.create(request)
   }
 
   /**
