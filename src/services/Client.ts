@@ -181,6 +181,17 @@ export class OllamaClient {
   }
 
   /**
+   * Retrieves a list of running processes from the Ollama server.
+   * @description Fetches all currently running model processes with metadata.
+   * @returns Promise that resolves to an array of model data objects
+   * @throws {Error} When the request fails or times out
+   */
+  async ps(): Promise<ModelData[]> {
+    const data: ModelResponse = await this.fetchClient.get<ModelResponse>(apiEndpoints['ps'] ?? '')
+    return data.models
+  }
+
+  /**
    * Pulls a model from the Ollama registry.
    * @description Downloads a model from the registry with streaming progress updates.
    * @param request - The pull request parameters

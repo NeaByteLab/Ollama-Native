@@ -223,6 +223,15 @@ ollama.list()
 - Returns: `Promise<ModelData[]>`
 - Description: Retrieves a list of available models from the Ollama server.
 
+### ps
+
+```typescript
+ollama.ps()
+```
+
+- Returns: `Promise<ModelData[]>`
+- Description: Retrieves a list of running processes from the Ollama server.
+
 ### pull
 
 ```typescript

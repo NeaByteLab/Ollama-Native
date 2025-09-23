@@ -13,6 +13,8 @@ export const apiEndpoints: Record<string, string> = {
   generate: '/api/generate',
   /** Endpoint for listing available models */
   list: '/api/tags',
+  /** Endpoint for listing running processes */
+  ps: '/api/ps',
   /** Endpoint for pulling models from registry */
   pull: '/api/pull',
   /** Endpoint for pushing models to registry */
