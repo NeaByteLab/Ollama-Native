@@ -52,6 +52,20 @@ export class FetchClient {
   }
 
   /**
+   * Manually aborts the current request.
+   * @description Cancels the ongoing request immediately.
+   * @returns True if request was aborted, false if no request was active
+   */
+  abort(): boolean {
+    if (this.currentController !== null) {
+      this.currentController.abort()
+      this.cleanupController()
+      return true
+    }
+    return false
+  }
+
+  /**
    * Makes an HTTP request to the specified endpoint.
    * @description Sends HTTP request with automatic JSON handling and timeout management.
    * @param endpoint - The API endpoint path (e.g., '/api/tags')
@@ -135,8 +149,12 @@ export class FetchClient {
    * @throws {Error} When content type is invalid or parsing fails
    */
   private async parseResponse<T>(response: Response): Promise<T> {
+    const contentLength: string | null = response.headers.get('content-length')
     const contentType: string | null = response.headers.get('content-type')
-    if (contentType !== null) {
+    if (contentLength === '0' || contentType === null) {
+      return { status: 'success' } as T
+    }
+    if (contentType != null) {
       const isJson: boolean = contentType.includes('application/json')
       if (isJson) {
         return (await response.json()) as T
@@ -189,6 +207,21 @@ export class FetchClient {
   }
 
   /**
+   * Makes a DELETE request to the specified endpoint.
+   * @description Convenience method for DELETE requests with optional data.
+   * @param endpoint - The API endpoint path
+   * @param options - Optional request configuration including data
+   * @returns Promise that resolves to the response data
+   * @throws {Error} When the request fails or times out
+   */
+  async delete<T = unknown>(
+    endpoint: string,
+    options: Omit<FetchOptions, 'method'> = {}
+  ): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' })
+  }
+
+  /**
    * Makes a GET request to the specified endpoint.
    * @description Convenience method for GET requests.
    * @param endpoint - The API endpoint path
@@ -235,35 +268,6 @@ export class FetchClient {
     options: Omit<FetchOptions, 'method'> = {}
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'PUT', data })
-  }
-
-  /**
-   * Makes a DELETE request to the specified endpoint.
-   * @description Convenience method for DELETE requests.
-   * @param endpoint - The API endpoint path
-   * @param options - Optional request configuration
-   * @returns Promise that resolves to the response data
-   * @throws {Error} When the request fails or times out
-   */
-  async delete<T = unknown>(
-    endpoint: string,
-    options: Omit<FetchOptions, 'method' | 'data'> = {}
-  ): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' })
-  }
-
-  /**
-   * Manually aborts the current request.
-   * @description Cancels the ongoing request immediately.
-   * @returns True if request was aborted, false if no request was active
-   */
-  abort(): boolean {
-    if (this.currentController !== null) {
-      this.currentController.abort()
-      this.cleanupController()
-      return true
-    }
-    return false
   }
 
   /**

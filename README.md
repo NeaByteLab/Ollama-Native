@@ -50,14 +50,22 @@ npm install @neabyte/ollama-native
 
 ```typescript
 import { 
-  OllamaService, 
-  OllamaConfig,
+  ChatMessage,
+  ModelCopyRequest,
   ModelData,
+  ModelDeleteRequest,
+  ModelProgress,
+  ModelPullRequest,
+  ModelPushRequest,
+  ModelShowRequest,
+  ModelShowResponse,
+  ModelStatusResponse,
+  OllamaConfig,
+  OllamaService,
   RequestChat,
   RequestGenerate,
   ResponseChat,
   ResponseGenerate,
-  ChatMessage,
   ToolCall
 } from '@neabyte/ollama-native'
 
@@ -89,53 +97,18 @@ try {
 }
 ```
 
-## 📋 Available Types
-
-The library exports the following TypeScript types for full type safety:
-
-### Core Types
-- `OllamaService` - Main service class
-- `OllamaConfig` - Configuration interface
-
-### Request Types
-- `RequestChat` - Chat completion request
-- `RequestGenerate` - Text generation request
-- `RequestOptions` - Model configuration options
-- `RequestThinking` - Thinking mode type
-- `ChatMessage` - Chat message structure
-
-### Response Types
-- `ResponseChat` - Chat completion response
-- `ResponseGenerate` - Text generation response
-- `ResponseChatStream` - Streaming chat response
-- `ResponseGenerateStream` - Streaming generation response
-
-### Model Types
-- `ModelData` - Model information
-- `ModelDetails` - Detailed model specifications
-- `ModelResponse` - Model list response
-
-### Tool Types
-- `ToolCall` - Function calling definition
-- `ToolItems` - Tool parameter schema
-
-### Utility Types
-- `errorHandler` - Error handling function
-- `isValidConfig` - Configuration validator
-- `isValidURL` - URL validator
-
 ---
 
 ## 📖 API Reference
 
-### list
+### abort
 
 ```typescript
-ollama.list()
+ollama.abort()
 ```
 
-- Returns: `Promise<ModelData[]>`
-- Description: Retrieves a list of available models from the Ollama server.
+- Returns: `boolean`
+- Description: Aborts the current request if one is active. Returns true if request was aborted, false if no request was active.
 
 ### chat
 
@@ -175,6 +148,29 @@ ollama.chatStream(request)
 - Returns: `Promise<AsyncIterable<ResponseChatStream>>`
 - Description: Chat completion with streaming and tool calling support.
 
+### copy
+
+```typescript
+ollama.copy(request)
+```
+
+- `request` `<ModelCopyRequest>`: The copy request parameters.
+  - `source` `<string>`: The name of the model to copy from.
+  - `destination` `<string>`: The name of the model to copy to.
+- Returns: `Promise<ModelStatusResponse>`
+- Description: Creates a copy of an existing model with a new name.
+
+### delete
+
+```typescript
+ollama.delete(request)
+```
+
+- `request` `<ModelDeleteRequest>`: The delete request parameters.
+  - `model` `<string>`: The name of the model to delete.
+- Returns: `Promise<ModelStatusResponse>`
+- Description: Deletes a model from the local Ollama installation.
+
 ### generate
 
 ```typescript
@@ -209,15 +205,6 @@ ollama.generateStream(request)
 - Returns: `Promise<AsyncIterable<ResponseGenerateStream>>`
 - Description: Generates text using the specified Ollama model with streaming response.
 
-### abort
-
-```typescript
-ollama.abort()
-```
-
-- Returns: `boolean`
-- Description: Aborts the current request if one is active. Returns true if request was aborted, false if no request was active.
-
 ### isActive
 
 ```typescript
@@ -226,6 +213,55 @@ ollama.isActive
 
 - Returns: `boolean`
 - Description: Checks if there's an active request that can be aborted. Returns true if a request is currently in progress.
+
+### list
+
+```typescript
+ollama.list()
+```
+
+- Returns: `Promise<ModelData[]>`
+- Description: Retrieves a list of available models from the Ollama server.
+
+### pull
+
+```typescript
+ollama.pull(request)
+```
+
+- `request` `<ModelPullRequest>`: The pull request parameters.
+  - `model` `<string>`: The name of the model to pull from the registry.
+  - `insecure` `<boolean>`: (Optional) Pull from servers whose identity cannot be verified.
+  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned for streaming progress.
+- Returns: `Promise<AsyncIterable<ModelProgress>>`
+- Description: Downloads a model from the Ollama registry with streaming progress updates.
+
+### push
+
+```typescript
+ollama.push(request)
+```
+
+- `request` `<ModelPushRequest>`: The push request parameters.
+  - `model` `<string>`: The name of the model to push to the registry.
+  - `insecure` `<boolean>`: (Optional) Push to servers whose identity cannot be verified.
+  - `stream` `<boolean>`: (Optional) When true an `AsyncGenerator` is returned for streaming progress.
+- Returns: `Promise<AsyncIterable<ModelProgress>>`
+- Description: Uploads a model to the Ollama registry with streaming progress updates.
+
+### show
+
+```typescript
+ollama.show(request)
+```
+
+- `request` `<ModelShowRequest>`: The show request parameters.
+  - `model` `<string>`: The name of the model to show.
+  - `system` `<string>`: (Optional) Override the model system prompt returned.
+  - `template` `<string>`: (Optional) Override the model template returned.
+  - `options` `<Record<string, unknown>>`: (Optional) Options to configure the runtime.
+- Returns: `Promise<ModelShowResponse>`
+- Description: Shows model information and configuration including license, system prompt, template, and parameters.
 
 ---
 

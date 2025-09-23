@@ -1,6 +1,14 @@
 import type {
   OllamaConfig,
   ModelData,
+  ModelPullRequest,
+  ModelPushRequest,
+  ModelProgress,
+  ModelDeleteRequest,
+  ModelCopyRequest,
+  ModelShowRequest,
+  ModelStatusResponse,
+  ModelShowResponse,
   RequestGenerate,
   ResponseGenerate,
   ResponseGenerateStream,
@@ -31,13 +39,56 @@ export class OllamaService {
   }
 
   /**
-   * Retrieves a list of available models from the Ollama server.
-   * @description Fetches all available models with metadata.
-   * @returns Promise that resolves to an array of model data objects
+   * Aborts the current request if one is active.
+   * @description Cancels the ongoing request immediately.
+   * @returns True if request was aborted, false if no request was active
+   */
+  abort(): boolean {
+    return this.client.abort()
+  }
+
+  /**
+   * Chat completion with tool calling support.
+   * @description Sends a chat request to the Ollama server and returns the complete response.
+   * @param request - The chat request parameters
+   * @returns Promise that resolves to the chat response
    * @throws {Error} When the request fails or times out
    */
-  list(): Promise<ModelData[]> {
-    return this.client.list()
+  chat(request: RequestChat): Promise<ResponseChat> {
+    return this.client.chat(request)
+  }
+
+  /**
+   * Chat completion with streaming and tool calling support.
+   * @description Sends a streaming chat request to the Ollama server and returns an async iterator.
+   * @param request - The chat request parameters (stream will be forced to true)
+   * @returns Promise that resolves to an async iterator of streaming chat responses
+   * @throws {Error} When the request fails or times out
+   */
+  chatStream(request: Omit<RequestChat, 'stream'>): Promise<AsyncIterable<ResponseChatStream>> {
+    return this.client.chatStream(request)
+  }
+
+  /**
+   * Copies a model to a new name.
+   * @description Creates a copy of an existing model with a new name.
+   * @param request - The copy request parameters
+   * @returns Promise that resolves to the model status response
+   * @throws {Error} When the request fails or times out
+   */
+  copy(request: ModelCopyRequest): Promise<ModelStatusResponse> {
+    return this.client.copy(request)
+  }
+
+  /**
+   * Deletes a model from the local registry.
+   * @description Removes a model from the local Ollama installation.
+   * @param request - The delete request parameters
+   * @returns Promise that resolves to the model status response
+   * @throws {Error} When the request fails or times out
+   */
+  delete(request: ModelDeleteRequest): Promise<ModelStatusResponse> {
+    return this.client.delete(request)
   }
 
   /**
@@ -65,42 +116,54 @@ export class OllamaService {
   }
 
   /**
-   * Chat completion with tool calling support.
-   * @description Sends a chat request to the Ollama server and returns the complete response.
-   * @param request - The chat request parameters
-   * @returns Promise that resolves to the chat response
-   * @throws {Error} When the request fails or times out
-   */
-  chat(request: RequestChat): Promise<ResponseChat> {
-    return this.client.chat(request)
-  }
-
-  /**
-   * Chat completion with streaming and tool calling support.
-   * @description Sends a streaming chat request to the Ollama server and returns an async iterator.
-   * @param request - The chat request parameters (stream will be forced to true)
-   * @returns Promise that resolves to an async iterator of streaming chat responses
-   * @throws {Error} When the request fails or times out
-   */
-  chatStream(request: Omit<RequestChat, 'stream'>): Promise<AsyncIterable<ResponseChatStream>> {
-    return this.client.chatStream(request)
-  }
-
-  /**
-   * Aborts the current request if one is active.
-   * @description Cancels the ongoing request immediately.
-   * @returns True if request was aborted, false if no request was active
-   */
-  abort(): boolean {
-    return this.client.abort()
-  }
-
-  /**
    * Checks if there's an active request that can be aborted.
    * @description Returns true if a request is currently in progress.
    * @returns True if request is active, false otherwise
    */
   get isActive(): boolean {
     return this.client.isActive
+  }
+
+  /**
+   * Retrieves a list of available models from the Ollama server.
+   * @description Fetches all available models with metadata.
+   * @returns Promise that resolves to an array of model data objects
+   * @throws {Error} When the request fails or times out
+   */
+  list(): Promise<ModelData[]> {
+    return this.client.list()
+  }
+
+  /**
+   * Pulls a model from the Ollama registry.
+   * @description Downloads a model from the registry with streaming progress updates.
+   * @param request - The pull request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  pull(request: ModelPullRequest): Promise<AsyncIterable<ModelProgress>> {
+    return this.client.pull(request)
+  }
+
+  /**
+   * Pushes a model to the Ollama registry.
+   * @description Uploads a model to the registry with streaming progress updates.
+   * @param request - The push request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  push(request: ModelPushRequest): Promise<AsyncIterable<ModelProgress>> {
+    return this.client.push(request)
+  }
+
+  /**
+   * Shows model information and configuration.
+   * @description Retrieves detailed information about a model including its configuration.
+   * @param request - The show request parameters
+   * @returns Promise that resolves to the model show response
+   * @throws {Error} When the request fails or times out
+   */
+  show(request: ModelShowRequest): Promise<ModelShowResponse> {
+    return this.client.show(request)
   }
 }

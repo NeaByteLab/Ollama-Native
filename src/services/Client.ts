@@ -1,6 +1,14 @@
 import type {
+  ModelCopyRequest,
   ModelData,
+  ModelDeleteRequest,
+  ModelProgress,
+  ModelPullRequest,
+  ModelPushRequest,
   ModelResponse,
+  ModelShowRequest,
+  ModelShowResponse,
+  ModelStatusResponse,
   OllamaConfig,
   RequestChat,
   RequestGenerate,
@@ -31,16 +39,12 @@ export class OllamaClient {
   }
 
   /**
-   * Retrieves a list of available models from the Ollama server.
-   * @description Fetches all available models with metadata.
-   * @returns Promise that resolves to an array of model data objects
-   * @throws {Error} When the request fails or times out
+   * Aborts the current request if one is active.
+   * @description Cancels the ongoing request immediately.
+   * @returns True if request was aborted, false if no request was active
    */
-  async list(): Promise<ModelData[]> {
-    const data: ModelResponse = await this.fetchClient.get<ModelResponse>(
-      apiEndpoints['list'] ?? ''
-    )
-    return data.models
+  abort(): boolean {
+    return this.fetchClient.abort()
   }
 
   /**
@@ -84,6 +88,30 @@ export class OllamaClient {
       apiEndpoints['chat'] ?? '',
       streamRequest
     )
+  }
+
+  /**
+   * Copies a model to a new name.
+   * @description Creates a copy of an existing model with a new name.
+   * @param request - The copy request parameters
+   * @returns Promise that resolves to the model status response
+   * @throws {Error} When the request fails or times out
+   */
+  async copy(request: ModelCopyRequest): Promise<ModelStatusResponse> {
+    return this.fetchClient.post<ModelStatusResponse>(apiEndpoints['copy'] ?? '', request)
+  }
+
+  /**
+   * Deletes a model from the local registry.
+   * @description Removes a model from the local Ollama installation.
+   * @param request - The delete request parameters
+   * @returns Promise that resolves to the model status response
+   * @throws {Error} When the request fails or times out
+   */
+  async delete(request: ModelDeleteRequest): Promise<ModelStatusResponse> {
+    return this.fetchClient.delete<ModelStatusResponse>(apiEndpoints['delete'] ?? '', {
+      data: { name: request.model }
+    })
   }
 
   /**
@@ -131,20 +159,59 @@ export class OllamaClient {
   }
 
   /**
-   * Aborts the current request if one is active.
-   * @description Cancels the ongoing request immediately.
-   * @returns True if request was aborted, false if no request was active
-   */
-  abort(): boolean {
-    return this.fetchClient.abort()
-  }
-
-  /**
    * Checks if there's an active request that can be aborted.
    * @description Returns true if a request is currently in progress.
    * @returns True if request is active, false otherwise
    */
   get isActive(): boolean {
     return this.fetchClient.isActive
+  }
+
+  /**
+   * Retrieves a list of available models from the Ollama server.
+   * @description Fetches all available models with metadata.
+   * @returns Promise that resolves to an array of model data objects
+   * @throws {Error} When the request fails or times out
+   */
+  async list(): Promise<ModelData[]> {
+    const data: ModelResponse = await this.fetchClient.get<ModelResponse>(
+      apiEndpoints['list'] ?? ''
+    )
+    return data.models
+  }
+
+  /**
+   * Pulls a model from the Ollama registry.
+   * @description Downloads a model from the registry with streaming progress updates.
+   * @param request - The pull request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  async pull(request: ModelPullRequest): Promise<AsyncIterable<ModelProgress>> {
+    const streamRequest: ModelPullRequest = { ...request, stream: true }
+    return this.fetchClient.postStream<ModelProgress>(apiEndpoints['pull'] ?? '', streamRequest)
+  }
+
+  /**
+   * Pushes a model to the Ollama registry.
+   * @description Uploads a model to the registry with streaming progress updates.
+   * @param request - The push request parameters
+   * @returns Promise that resolves to an async iterator of progress updates
+   * @throws {Error} When the request fails or times out
+   */
+  async push(request: ModelPushRequest): Promise<AsyncIterable<ModelProgress>> {
+    const streamRequest: ModelPushRequest = { ...request, stream: true }
+    return this.fetchClient.postStream<ModelProgress>(apiEndpoints['push'] ?? '', streamRequest)
+  }
+
+  /**
+   * Shows model information and configuration.
+   * @description Retrieves detailed information about a model including its configuration.
+   * @param request - The show request parameters
+   * @returns Promise that resolves to the model show response
+   * @throws {Error} When the request fails or times out
+   */
+  async show(request: ModelShowRequest): Promise<ModelShowResponse> {
+    return this.fetchClient.post<ModelShowResponse>(apiEndpoints['show'] ?? '', request)
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@neabyte/ollama-native",
   "version": "0.1.0",
-  "description": "TypeScript client library for Ollama API with retry logic, timeout management, and error handling",
+  "description": "TypeScript client library for Ollama API with retry logic, timeout management, error handling, and validation.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "clean": "rm -rf dist && rm -rf .tsbuildinfo",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "npm run check-all && npm run clean && npm run build",
     "type-check": "tsc --noEmit",
     "check-all": "npm run lint && npm run type-check"
   },
@@ -33,7 +33,22 @@
     "retry",
     "timeout",
     "http-client",
-    "nodejs"
+    "nodejs",
+    "machine-learning",
+    "language-model",
+    "chat",
+    "generation",
+    "streaming",
+    "tool-calling",
+    "function-calling",
+    "model-management",
+    "async",
+    "promise",
+    "fetch",
+    "http",
+    "rest",
+    "sdk",
+    "library"
   ],
   "author": {
     "name": "NeaByteLab",
