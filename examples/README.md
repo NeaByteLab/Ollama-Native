@@ -16,6 +16,9 @@ This directory contains examples showing how to use the Ollama Native library.
 - **`abort-manual.ts`** - Manual request abortion using the abort() method
 - **`abort-timing.ts`** - Timing-based request abortion with setTimeout
 
+### ⏱️ Timeout Examples
+- **`timeout.ts`** - Request timeout configuration and handling
+
 ## 🌐 Web API Examples
 
 ### Web Features
@@ -40,6 +43,7 @@ This directory contains examples showing how to use the Ollama Native library.
    npx tsx examples/api-generate/thinking-gpt.ts
    npx tsx examples/api-generate/abort-manual.ts
    npx tsx examples/api-generate/abort-timing.ts
+   npx tsx examples/api-generate/timeout.ts
 
    # Web API Examples (requires OLLAMA_API_KEY)
    export OLLAMA_API_KEY=your_api_key
