@@ -275,9 +275,9 @@ export class OllamaClient {
     }
     const webConfig: OllamaConfig = {
       host: ollamaBase,
-      ...(this.config.headers !== undefined && { headers: this.config.headers }),
-      ...(this.config.timeout !== undefined && { timeout: this.config.timeout }),
-      ...(this.config.retries !== undefined && { retries: this.config.retries })
+      ...this.config.headers !== undefined && { headers: this.config.headers },
+      ...this.config.timeout !== undefined && { timeout: this.config.timeout },
+      ...this.config.retries !== undefined && { retries: this.config.retries }
     }
     const webFetchClient: FetchClient = new FetchClient(webConfig)
     return webFetchClient.post<WebFetchResponse>('/web_fetch', request)
@@ -299,9 +299,9 @@ export class OllamaClient {
     }
     const webConfig: OllamaConfig = {
       host: ollamaBase,
-      ...(this.config.headers !== undefined && { headers: this.config.headers }),
-      ...(this.config.timeout !== undefined && { timeout: this.config.timeout }),
-      ...(this.config.retries !== undefined && { retries: this.config.retries })
+      ...this.config.headers !== undefined && { headers: this.config.headers },
+      ...this.config.timeout !== undefined && { timeout: this.config.timeout },
+      ...this.config.retries !== undefined && { retries: this.config.retries }
     }
     const webFetchClient: FetchClient = new FetchClient(webConfig)
     return webFetchClient.post<WebSearchResponse>('/web_search', request)

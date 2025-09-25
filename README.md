@@ -11,7 +11,7 @@
 </div>
 <div align="center">
   <p>
-    <strong>Alternative to:</strong> 
+    <strong>Alternative to:</strong>
     <a href="https://github.com/ollama/ollama-js">Official Ollama JavaScript Library</a>
   </p>
 </div>
@@ -30,6 +30,7 @@
 ## ✨ Features
 
 - 🎯 TypeScript Support - Built with TypeScript for type safety
+- 🛠️ Tool Calling - Full support for function calling and tool execution
 - 🔄 Retry Mechanism - Automatic retry with exponential backoff
 - ⏱️ Request Timeouts - Configurable timeout handling
 - 🛡️ Error Management - Structured error handling with context
@@ -49,7 +50,7 @@ npm install @neabyte/ollama-native
 ### Basic Usage
 
 ```typescript
-import { 
+import {
   ChatMessage,
   EmbedRequest,
   EmbedResponse,
@@ -78,6 +79,7 @@ import {
   ResponseGenerateStream,
   ToolCall,
   ToolItems,
+  ToolResponse,
   WebFetchRequest,
   WebFetchResponse,
   WebSearchRequest,
@@ -125,6 +127,7 @@ const response = await ollama.chat({
   stream: false
 })
 console.log(response.message.content) // AI's response
+console.log('Done reason:', response.done_reason) // 'stop', 'tool_calls', etc.
 
 // Streaming chat
 const stream = await ollama.chat({
@@ -136,6 +139,70 @@ const stream = await ollama.chat({
 })
 for await (const chunk of stream) {
   console.log(chunk.message?.content || '') // Real-time response
+  if (chunk.done) {
+    console.log('Stream complete:', chunk.done_reason)
+  }
+}
+```
+
+### 🛠️ **Tool Calling**
+```typescript
+// Define tools for the model to use
+const tools: ToolCall[] = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_weather',
+      description: 'Get current weather for a location',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: {
+            type: 'string',
+            description: 'The city and state, e.g. San Francisco, CA'
+          }
+        },
+        required: ['location']
+      }
+    }
+  }
+]
+
+// Chat with tool calling
+const response = await ollama.chat({
+  model: 'llama3',
+  messages: [
+    { role: 'user', content: 'What is the weather in New York?' }
+  ],
+  tools: tools,
+  stream: false
+})
+
+// Check if model made tool calls
+if (response.tool_calls && response.tool_calls.length > 0) {
+  response.tool_calls.forEach(toolCall => {
+    console.log(`Tool: ${toolCall.function.name}`)
+    console.log(`Arguments:`, toolCall.function.arguments)
+  })
+}
+
+// Streaming with tool calling
+const stream = await ollama.chat({
+  model: 'llama3',
+  messages: [
+    { role: 'user', content: 'What is the weather in New York?' }
+  ],
+  tools: tools,
+  stream: true
+})
+
+for await (const chunk of stream) {
+  if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+    console.log('Model wants to use tools:', chunk.tool_calls)
+  }
+  if (chunk.done) {
+    console.log('Stream complete:', chunk.done_reason)
+  }
 }
 ```
 
@@ -148,6 +215,7 @@ const text = await ollama.generate({
   stream: false
 })
 console.log(text.response) // Generated haiku
+console.log('Done reason:', text.done_reason) // 'stop', 'tool_calls', etc.
 
 // Streaming generate
 const stream = await ollama.generate({
@@ -157,6 +225,9 @@ const stream = await ollama.generate({
 })
 for await (const chunk of stream) {
   console.log(chunk.response || '') // Real-time generation
+  if (chunk.done) {
+    console.log('Stream complete:', chunk.done_reason)
+  }
 }
 ```
 

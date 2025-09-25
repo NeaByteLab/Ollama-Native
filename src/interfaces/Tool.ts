@@ -3,16 +3,16 @@
  * @description Defines the structure and validation rules for tool parameters.
  */
 export interface ToolItems {
-  /** The data type of the tool item */
-  type: 'string' | 'array' | 'object'
   /** Description of what this tool item represents */
   description: string
-  /** Nested properties for object types */
-  properties?: Record<string, ToolItems>
-  /** Item definition for array types */
-  items?: ToolItems
+  /** The data type of the tool item */
+  type: 'string' | 'array' | 'object'
   /** Enum values for string types */
   enum?: string[]
+  /** Item definition for array types */
+  items?: ToolItems
+  /** Nested properties for object types */
+  properties?: Record<string, ToolItems>
 }
 
 /**
@@ -24,22 +24,38 @@ export interface ToolCall {
   type: 'function'
   /** Function definition and parameters */
   function: {
-    /** The name of the function */
-    name?: string
     /** Description of what the function does */
     description?: string
+    /** The name of the function */
+    name?: string
     /** Parameter schema definition */
     parameters?: {
       /** The type of the parameters object */
       type?: 'object'
-      /** Properties of the parameters */
-      properties?: Record<string, ToolItems>
-      /** Item definition for array parameters */
-      items?: ToolItems
       /** Enum values for parameters */
       enum?: string[]
+      /** Item definition for array parameters */
+      items?: ToolItems
+      /** Properties of the parameters */
+      properties?: Record<string, ToolItems>
       /** Required parameter names */
       required?: string[]
     }
+  }
+}
+
+/**
+ * Interface for tool call response.
+ * @description Represents an actual tool call made by the model with arguments.
+ */
+export interface ToolResponse {
+  /** The type of tool call */
+  type: 'function'
+  /** Function call with actual arguments */
+  function: {
+    /** The actual arguments passed to the function */
+    arguments?: Record<string, unknown>
+    /** The name of the function being called */
+    name?: string
   }
 }

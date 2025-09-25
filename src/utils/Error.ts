@@ -7,6 +7,6 @@
  */
 export function errorHandler(error: unknown, context: string): void {
   const errorStack: string =
-    error instanceof Error ? (error.stack ?? 'Unknown stack') : 'Unknown stack'
+    error instanceof Error ? error.stack ?? 'Unknown stack' : 'Unknown stack'
   throw new Error(`[ Context: ${context} ]\n -> Stack: ${errorStack}`)
 }
