@@ -1,6 +1,6 @@
 /**
- * Export all constants, interfaces, services, and utils
- * @description Export all constants, interfaces, services, and utils
+ * Main module exports.
+ * @description Re-exports all constants, interfaces, services, and utilities.
  */
 export * from '@constants/index'
 export * from '@interfaces/index'

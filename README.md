@@ -34,8 +34,8 @@
 - 🔄 Retry Mechanism - Automatic retry with exponential backoff
 - ⏱️ Request Timeouts - Configurable timeout handling
 - 🛡️ Error Management - Structured error handling with context
-- 🚀 No Dependencies - Zero external dependencies
 - 🔧 Configuration Options - Customizable headers, timeouts, and retries
+- 🚀 No Dependencies - Zero external dependencies
 
 ---
 

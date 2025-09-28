@@ -1,54 +1,46 @@
 import type { OllamaConfig } from '@interfaces/index'
-import { errorHandler } from '@utils/Error'
+import { OllamaError } from '@utils/index'
 
 /**
- * Validates Ollama configuration object for required fields and correct types.
- * @description Validates OllamaConfig including host URL, types, and numeric ranges.
- * @param config - The Ollama configuration object to validate
- * @returns True if the configuration is valid
- * @throws {Error} When configuration validation fails with specific error messages
+ * Validates Ollama configuration object.
+ * @description Checks required fields and types for OllamaConfig.
+ * @param config - Configuration object to validate
+ * @returns True if valid
+ * @throws {Error} When validation fails
  */
 export function isValidConfig(config: OllamaConfig): boolean {
-  const contextStr: string = 'Validator.isValidConfig()'
   if (!config.host || typeof config.host !== 'string') {
-    errorHandler(new Error('Invalid host: must be a non-empty string'), contextStr)
-    return false
+    throw new OllamaError(400, 'Invalid host: must be a non-empty string')
   }
   if (!isValidURL(config.host)) {
-    errorHandler(new Error('Invalid host URL: must be a valid HTTP/HTTPS URL'), contextStr)
-    return false
+    throw new OllamaError(400, 'Invalid host URL: must be a valid HTTP/HTTPS URL')
   }
   if (
     config.timeout !== undefined &&
-    (typeof config.timeout !== 'number' ||
-      config.timeout < 1 ||
-      config.timeout > Number.MAX_SAFE_INTEGER)
+    (typeof config.timeout !== 'number' || config.timeout < 1000 || config.timeout > 86400000)
   ) {
-    errorHandler(
-      new Error('Invalid timeout: must be between 1 and 9007199254740991 milliseconds'),
-      contextStr
+    throw new OllamaError(
+      400,
+      'Invalid timeout: must be between 1000 and 86400000 milliseconds (1 second to 1 day)'
     )
-    return false
   }
   if (config.retries !== undefined && (typeof config.retries !== 'number' || config.retries < 0)) {
-    errorHandler(new Error('Invalid retries: must be a non-negative number'), contextStr)
-    return false
+    throw new OllamaError(400, 'Invalid retries: must be a non-negative number')
   }
   if (
     config.headers !== undefined &&
     (typeof config.headers !== 'object' || config.headers == null)
   ) {
-    errorHandler(new Error('Invalid headers: must be an object'), contextStr)
-    return false
+    throw new OllamaError(400, 'Invalid headers: must be an object')
   }
   return true
 }
 
 /**
- * Validates if a string is a valid HTTP or HTTPS URL.
- * @description Checks if string is a valid HTTP/HTTPS URL with proper hostname and port.
- * @param url - The URL string to validate
- * @returns True if the URL is valid, false otherwise
+ * Validates HTTP or HTTPS URL string.
+ * @description Checks URL format, hostname, and port validity.
+ * @param url - URL string to validate
+ * @returns True if valid, false otherwise
  */
 export function isValidURL(url: string): boolean {
   if (!url || typeof url !== 'string') {

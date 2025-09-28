@@ -23,21 +23,21 @@ import type {
   WebSearchRequest,
   WebSearchResponse
 } from '@interfaces/index'
-import { OllamaClient } from './Client'
+import { OllamaClient } from '@services/Client'
 import { isValidConfig } from '@utils/index'
 
 /**
- * Service class for interacting with Ollama API.
- * @description High-level interface for Ollama operations.
+ * Service for Ollama API operations.
+ * @description Interface for Ollama operations.
  */
 export class OllamaService {
   /** The internal Ollama client instance */
   private readonly client: OllamaClient
 
   /**
-   * Creates a new OllamaService instance.
+   * Creates an OllamaService instance.
    * @description Initializes service with validated configuration.
-   * @param config - The Ollama configuration object
+   * @param config - Ollama configuration object
    * @throws {Error} When configuration validation fails
    */
   constructor(config: OllamaConfig) {

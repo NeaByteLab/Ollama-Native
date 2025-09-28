@@ -1,12 +1,23 @@
 /**
- * Handles errors by adding context and re-throwing with formatted message.
- * @description Takes an unknown error and context string, then throws a new error with formatted message.
- * @param error - The error to handle (can be Error instance or unknown type)
- * @param context - The context where the error occurred (e.g., 'MyFunction.processData()')
- * @throws {Error} Always throws a new error with context and original message
+ * Error class for Ollama API operations.
+ * @description Extends Error to include HTTP status codes.
  */
-export function errorHandler(error: unknown, context: string): void {
-  const errorStack: string =
-    error instanceof Error ? error.stack ?? 'Unknown stack' : 'Unknown stack'
-  throw new Error(`[ Context: ${context} ]\n -> Stack: ${errorStack}`)
+export class OllamaError extends Error {
+  /** HTTP status code associated with the error */
+  status: number
+  /** Error message describing what went wrong */
+  override message: string
+
+  /**
+   * Creates an OllamaError instance.
+   * @description Initializes error with status code and message.
+   * @param status - HTTP status code (defaults to 500)
+   * @param message - Error message (defaults to 'Unknown error')
+   */
+  constructor(status?: number, message?: string) {
+    super(message)
+    this.name = 'OllamaError'
+    this.status = status ?? 500
+    this.message = message ?? 'Unknown error'
+  }
 }

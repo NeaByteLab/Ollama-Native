@@ -1,10 +1,10 @@
 import type { OllamaConfig } from '@interfaces/index'
 import { AbortController } from '@services/Controller'
-import { errorHandler } from '@utils/index'
+import { OllamaError } from '@utils/index'
 
 /**
- * Global fetch is available in Node.js 18+
- * @description Global fetch is available in Node.js 18+
+ * Global fetch declaration for Node.js 18+.
+ * @description Declares global fetch for TypeScript.
  */
 declare const fetch: typeof globalThis.fetch
 
@@ -24,8 +24,8 @@ interface FetchOptions {
 }
 
 /**
- * Simplified fetch client for making HTTP requests.
- * @description Provides an easy-to-use interface for HTTP requests with automatic JSON handling and timeout management.
+ * Fetch client for HTTP requests.
+ * @description Handles HTTP requests with JSON and timeout management.
  */
 export class FetchClient {
   /** The configuration for the fetch client */
@@ -34,9 +34,9 @@ export class FetchClient {
   private currentController: AbortController | null = null
 
   /**
-   * Creates a new FetchClient instance.
-   * @description Initializes the client with the provided configuration.
-   * @param config - The configuration for the fetch client
+   * Creates a FetchClient instance.
+   * @description Initializes client with configuration.
+   * @param config - Configuration for the client
    */
   constructor(config: OllamaConfig) {
     this.config = {
@@ -67,7 +67,7 @@ export class FetchClient {
 
   /**
    * Makes an HTTP request to the specified endpoint.
-   * @description Sends HTTP request with automatic JSON handling and timeout management.
+   * @description Makes HTTP request.
    * @param endpoint - The API endpoint path (e.g., '/api/tags')
    * @param options - Request configuration options
    * @returns Promise that resolves to the response data
@@ -95,13 +95,18 @@ export class FetchClient {
         break
       }
     }
-    errorHandler(lastError, `FetchClient.request() -> ${endpoint}`)
-    return null as T
+    if (lastError instanceof OllamaError) {
+      throw lastError
+    }
+    throw new OllamaError(
+      500,
+      `Request failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`
+    )
   }
 
   /**
    * Executes a single HTTP request with timeout and abort control.
-   * @description Performs the actual HTTP request with proper error handling and response parsing.
+   * @description Executes HTTP request.
    * @param endpoint - The API endpoint path
    * @param method - The HTTP method to use
    * @param data - The request body data
@@ -132,18 +137,14 @@ export class FetchClient {
     const response: Response = await fetch(url, fetchOptions)
     this.cleanupController()
     if (!response.ok) {
-      errorHandler(
-        new Error(`HTTP ${response.status}: ${response.statusText}`),
-        `FetchClient.executeRequest() -> ${url}`
-      )
-      return null as T
+      throw new OllamaError(response.status, `HTTP ${response.status}: ${response.statusText}`)
     }
     return this.parseResponse<T>(response)
   }
 
   /**
    * Parses the HTTP response based on content type.
-   * @description Automatically detects content type and parses JSON or text accordingly.
+   * @description Parses HTTP response.
    * @param response - The HTTP response object
    * @returns Promise that resolves to the parsed response data
    * @throws {Error} When content type is invalid or parsing fails
@@ -162,16 +163,12 @@ export class FetchClient {
         return (await response.text()) as T
       }
     }
-    errorHandler(
-      new Error('Invalid content type'),
-      `FetchClient.parseResponse() -> ${response.url}`
-    )
-    return null as T
+    throw new OllamaError(400, 'Invalid content type')
   }
 
   /**
    * Determines if a request should be retried based on error type and attempt count.
-   * @description Checks if the error is retryable and if we haven't exceeded max retry attempts.
+   * @description Determines if request should be retried.
    * @param error - The error that occurred
    * @param attempt - The current attempt number (0-based)
    * @returns True if the request should be retried, false otherwise
@@ -185,7 +182,7 @@ export class FetchClient {
 
   /**
    * Waits before retrying a failed request with exponential backoff.
-   * @description Implements exponential backoff strategy with a maximum delay cap.
+   * @description Waits before retrying request.
    * @param attempt - The current attempt number (0-based)
    * @returns Promise that resolves after the calculated delay
    */
@@ -196,7 +193,7 @@ export class FetchClient {
 
   /**
    * Cleans up the current abort controller.
-   * @description Clears the timeout and sets the controller to null.
+   * @description Cleans up abort controller.
    * @returns void
    */
   private cleanupController(): void {
@@ -208,7 +205,7 @@ export class FetchClient {
 
   /**
    * Makes a DELETE request to the specified endpoint.
-   * @description Convenience method for DELETE requests with optional data.
+   * @description DELETE request method.
    * @param endpoint - The API endpoint path
    * @param options - Optional request configuration including data
    * @returns Promise that resolves to the response data
@@ -223,7 +220,7 @@ export class FetchClient {
 
   /**
    * Makes a GET request to the specified endpoint.
-   * @description Convenience method for GET requests.
+   * @description GET request method.
    * @param endpoint - The API endpoint path
    * @param options - Optional request configuration
    * @returns Promise that resolves to the response data
@@ -238,7 +235,7 @@ export class FetchClient {
 
   /**
    * Makes a POST request to the specified endpoint.
-   * @description Convenience method for POST requests with data.
+   * @description POST request method.
    * @param endpoint - The API endpoint path
    * @param data - The data to send in the request body
    * @param options - Optional request configuration
@@ -255,7 +252,7 @@ export class FetchClient {
 
   /**
    * Makes a PUT request to the specified endpoint.
-   * @description Convenience method for PUT requests with data.
+   * @description PUT request method.
    * @param endpoint - The API endpoint path
    * @param data - The data to send in the request body
    * @param options - Optional request configuration
@@ -281,7 +278,7 @@ export class FetchClient {
 
   /**
    * Makes a streaming POST request to the specified endpoint.
-   * @description Convenience method for streaming POST requests with data.
+   * @description Streaming POST request method with retry logic.
    * @param endpoint - The API endpoint path
    * @param data - The data to send in the request body
    * @param options - Optional request configuration
@@ -294,53 +291,71 @@ export class FetchClient {
     options: Omit<FetchOptions, 'method'> = {}
   ): Promise<AsyncIterable<T>> {
     const { headers = {}, timeout = this.config.timeout }: Omit<FetchOptions, 'method'> = options
-    this.currentController = new AbortController()
-    this.currentController.setTimeout(timeout)
+    let lastError: unknown = null
+    for (let attempt: number = 0; attempt <= this.config.retries; attempt++) {
+      try {
+        this.currentController = new AbortController()
+        this.currentController.setTimeout(timeout)
+        return await this.executeStreamRequest<T>(endpoint, data, headers)
+      } catch (error: unknown) {
+        lastError = error
+        this.cleanupController()
+        if (this.shouldRetry(error, attempt)) {
+          await this.waitForRetry(attempt)
+          continue
+        }
+        break
+      }
+    }
+    if (lastError instanceof OllamaError) {
+      throw lastError
+    }
+    throw new OllamaError(
+      500,
+      `Stream request failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`
+    )
+  }
+
+  /**
+   * Executes a single streaming HTTP request with timeout and abort control.
+   * @description Executes streaming HTTP request.
+   * @param endpoint - The API endpoint path
+   * @param data - The request body data
+   * @param headers - Additional headers to include
+   * @param timeout - Request timeout in milliseconds
+   * @returns Promise that resolves to an async iterator of streaming responses
+   * @throws {Error} When the request fails or times out
+   */
+  private async executeStreamRequest<T>(
+    endpoint: string,
+    data: unknown,
+    headers: Record<string, string>
+  ): Promise<AsyncIterable<T>> {
     const url: string = `${this.config.host}${endpoint}`
     const requestHeaders: Record<string, string> = { ...this.config.headers, ...headers }
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: requestHeaders,
-      signal: this.currentController.signal
+      signal: this.currentController?.signal ?? null
     }
     if (data !== undefined) {
       fetchOptions.body = JSON.stringify(data)
     }
-    try {
-      const response: Response = await fetch(url, fetchOptions)
-      if (!response.ok) {
-        this.cleanupController()
-        errorHandler(
-          new Error(`HTTP ${response.status}: ${response.statusText}`),
-          `FetchClient.postStream() -> ${url}`
-        )
-        return this.createEmptyIterator<T>()
-      }
-      if (!response.body) {
-        this.cleanupController()
-        errorHandler(new Error('Response body is null'), `FetchClient.postStream() -> ${url}`)
-        return this.createEmptyIterator<T>()
-      }
-      return this.createStreamIterator<T>(response.body)
-    } catch (error: unknown) {
+    const response: Response = await fetch(url, fetchOptions)
+    if (!response.ok) {
       this.cleanupController()
-      errorHandler(error, `FetchClient.postStream() -> ${url}`)
-      return this.createEmptyIterator<T>()
+      throw new OllamaError(response.status, `HTTP ${response.status}: ${response.statusText}`)
     }
-  }
-
-  /**
-   * Creates an empty async iterator for error cases.
-   * @description Returns an empty async iterator when streaming fails.
-   * @returns Empty async iterator
-   */
-  private async *createEmptyIterator<T>(): AsyncIterableIterator<T> {
-    // Empty iterator - no items to yield
+    if (!response.body) {
+      this.cleanupController()
+      throw new OllamaError(500, 'Response body is null')
+    }
+    return this.createStreamIterator<T>(response.body)
   }
 
   /**
    * Creates an async iterator from a ReadableStream for streaming responses.
-   * @description Parses streaming JSON responses line by line with abort support.
+   * @description Creates async iterator from stream.
    * @param body - The response body ReadableStream
    * @returns Async iterator that yields parsed JSON objects
    */
@@ -363,6 +378,9 @@ export class FetchClient {
         const lines: string[] = buffer.split('\n')
         buffer = lines.pop() ?? ''
         for (const parsed of this.processStreamLines<T>(lines)) {
+          if (this.shouldAbortStream()) {
+            break
+          }
           yield parsed
         }
       }
@@ -382,7 +400,7 @@ export class FetchClient {
 
   /**
    * Checks if the stream should be aborted.
-   * @description Determines if the current request should be aborted.
+   * @description Checks if stream should be aborted.
    * @returns True if the stream should be aborted, false otherwise
    */
   private shouldAbortStream(): boolean {
@@ -394,7 +412,7 @@ export class FetchClient {
 
   /**
    * Processes stream lines and yields parsed JSON objects.
-   * @description Parses and yields JSON objects from stream lines.
+   * @description Processes stream lines.
    * @param lines - Array of lines to process
    */
   private *processStreamLines<T>(lines: string[]): IterableIterator<T> {

@@ -1,12 +1,12 @@
 /**
- * The base URL for the Ollama web API.
- * @description Base URL for web search and fetch endpoints.
+ * Base URL for Ollama web API.
+ * @description URL for web search and fetch endpoints.
  */
 export const ollamaBase: string = 'https://ollama.com/api'
 
 /**
- * API endpoint mappings for Ollama server communication.
- * @description Centralized endpoint definitions for all Ollama API operations.
+ * API endpoint mappings for Ollama server.
+ * @description Endpoint definitions for Ollama API operations.
  */
 export const apiEndpoints: Record<string, string> = {
   /** Endpoint for chat completion requests */

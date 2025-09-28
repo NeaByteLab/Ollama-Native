@@ -26,11 +26,11 @@ import type {
 } from '@interfaces/index'
 import { ollamaBase, apiEndpoints } from '@constants/index'
 import { FetchClient } from '@services/Fetch'
-import { errorHandler, isValidURL } from '@utils/index'
+import { OllamaError, isValidURL } from '@utils/index'
 
 /**
- * Low-level Ollama client for HTTP communication.
- * @description Handles direct API communication with Ollama server.
+ * Ollama client for HTTP communication.
+ * @description Handles API communication with Ollama server.
  */
 export class OllamaClient {
   /** The fetch client for making HTTP requests */
@@ -39,9 +39,9 @@ export class OllamaClient {
   private readonly config: OllamaConfig
 
   /**
-   * Creates a new OllamaClient instance.
-   * @description Initializes the client with the provided configuration.
-   * @param config - The configuration for the Ollama client
+   * Creates an OllamaClient instance.
+   * @description Initializes client with configuration.
+   * @param config - Configuration for the client
    */
   constructor(config: OllamaConfig) {
     this.config = config
@@ -60,9 +60,9 @@ export class OllamaClient {
   /**
    * Chat completion with tool calling support.
    * @description Sends a chat request to the Ollama server with optional streaming.
-   * @param request - The chat request parameters
-   * @returns Promise that resolves to chat response or async iterator of streaming responses
-   * @throws {Error} When the request fails or times out
+   * @param request - Chat request parameters
+   * @returns Promise resolving to chat response or async iterator for streaming
+   * @throws {Error} When request fails or times out
    */
   async chat(request: RequestChat): Promise<ResponseChat | AsyncIterable<ResponseChatStream>> {
     if (request.stream === false) {
@@ -79,9 +79,9 @@ export class OllamaClient {
         }
       }
       if (finalResponse === null) {
-        errorHandler(new Error('No response received from Ollama server'), 'OllamaClient.chat()')
+        throw new OllamaError(500, 'No response received from Ollama server')
       }
-      return finalResponse as ResponseChat
+      return finalResponse
     }
     const streamRequest: RequestChat = { ...request, stream: true }
     return this.fetchClient.postStream<ResponseChatStream>(
@@ -92,10 +92,9 @@ export class OllamaClient {
 
   /**
    * Copies a model to a new name.
-   * @description Creates a copy of an existing model with a new name.
-   * @param request - The copy request parameters
-   * @returns Promise that resolves to the model status response
-   * @throws {Error} When the request fails or times out
+   * @param request - Copy request parameters
+   * @returns Promise resolving to model status response
+   * @throws {Error} When request fails or times out
    */
   async copy(request: ModelCopyRequest): Promise<ModelStatusResponse> {
     return this.fetchClient.post<ModelStatusResponse>(apiEndpoints['copy'] ?? '', request)
@@ -103,10 +102,9 @@ export class OllamaClient {
 
   /**
    * Creates a new model from a base model.
-   * @description Creates a custom model with specified parameters, quantization, and configuration.
-   * @param request - The create request parameters
-   * @returns Promise that resolves to an async iterator of progress updates or status response
-   * @throws {Error} When the request fails or times out
+   * @param request - Create request parameters
+   * @returns Promise resolving to progress updates iterator or status response
+   * @throws {Error} When request fails or times out
    */
   async create(
     request: ModelCreateRequest
@@ -120,10 +118,9 @@ export class OllamaClient {
 
   /**
    * Deletes a model from the local registry.
-   * @description Removes a model from the local Ollama installation.
-   * @param request - The delete request parameters
-   * @returns Promise that resolves to the model status response
-   * @throws {Error} When the request fails or times out
+   * @param request - Delete request parameters
+   * @returns Promise resolving to model status response
+   * @throws {Error} When request fails or times out
    */
   async delete(request: ModelDeleteRequest): Promise<ModelStatusResponse> {
     return this.fetchClient.delete<ModelStatusResponse>(apiEndpoints['delete'] ?? '', {
@@ -132,22 +129,22 @@ export class OllamaClient {
   }
 
   /**
-   * Generates embeddings using the specified Ollama model.
+   * Generates embeddings using the specified model.
    * @description Sends an embedding request to the Ollama server and returns the embeddings.
-   * @param request - The embedding request parameters
-   * @returns Promise that resolves to the embedding response
-   * @throws {Error} When the request fails or times out
+   * @param request - Embedding request parameters
+   * @returns Promise resolving to embedding response
+   * @throws {Error} When request fails or times out
    */
   async embed(request: EmbedRequest): Promise<EmbedResponse> {
     return this.fetchClient.post<EmbedResponse>(apiEndpoints['embed'] ?? '', request)
   }
 
   /**
-   * Generates text using the specified Ollama model.
+   * Generates text using the specified model.
    * @description Sends a generation request to the Ollama server with optional streaming.
-   * @param request - The generation request parameters
-   * @returns Promise that resolves to generation response or async iterator of streaming responses
-   * @throws {Error} When the request fails or times out
+   * @param request - Generation request parameters
+   * @returns Promise resolving to generation response or async iterator for streaming
+   * @throws {Error} When request fails or times out
    */
   async generate(
     request: RequestGenerate
@@ -167,12 +164,9 @@ export class OllamaClient {
         }
       }
       if (finalResponse === null) {
-        errorHandler(
-          new Error('No response received from Ollama server'),
-          'OllamaClient.generate()'
-        )
+        throw new OllamaError(500, 'No response received from Ollama server')
       }
-      return finalResponse as ResponseGenerate
+      return finalResponse
     }
     const streamRequest: RequestGenerate = { ...request, stream: true }
     return this.fetchClient.postStream<ResponseGenerateStream>(
@@ -268,10 +262,7 @@ export class OllamaClient {
    */
   async webFetch(request: WebFetchRequest): Promise<WebFetchResponse> {
     if (!isValidURL(request.url)) {
-      errorHandler(
-        new Error('Invalid URL: must be a valid HTTP/HTTPS URL'),
-        'OllamaClient.webFetch()'
-      )
+      throw new OllamaError(400, 'Invalid URL: must be a valid HTTP/HTTPS URL')
     }
     const webConfig: OllamaConfig = {
       host: ollamaBase,
@@ -292,10 +283,7 @@ export class OllamaClient {
    */
   async webSearch(request: WebSearchRequest): Promise<WebSearchResponse> {
     if (!request.query || request.query.length === 0) {
-      errorHandler(
-        new Error('Invalid query: must be a non-empty string'),
-        'OllamaClient.webSearch()'
-      )
+      throw new OllamaError(400, 'Invalid query: must be a non-empty string')
     }
     const webConfig: OllamaConfig = {
       host: ollamaBase,

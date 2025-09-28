@@ -1,6 +1,6 @@
 /**
- * Abort controller utility for managing request cancellation.
- * @description Provides centralized abort control for HTTP requests with timeout management.
+ * Abort controller for request cancellation.
+ * @description Manages HTTP request cancellation with timeout.
  */
 export class AbortController {
   /** The abort controller instance */
@@ -9,8 +9,8 @@ export class AbortController {
   private timeoutId: ReturnType<typeof setTimeout> | null = null
 
   /**
-   * Creates a new AbortController instance.
-   * @description Initializes the controller with a new AbortController instance.
+   * Creates an AbortController instance.
+   * @description Initializes controller.
    */
   constructor() {
     this.controller = new globalThis.AbortController()
