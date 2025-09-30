@@ -1,23 +1,23 @@
 {
   "name": "@neabyte/ollama-native",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "TypeScript client library for Ollama API with retry logic, timeout management, error handling, and validation.",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "tsc && tsc-alias -f -fe .js && npm run minify",
-    "minify": "find dist -name '*.js' -exec terser {} --compress --mangle -o {} \\;",
-    "dev": "tsc --watch",
-    "lint": "eslint src/**/**/**/*.ts",
-    "lint:fix": "eslint src/**/**/**/*.ts --fix",
-    "format": "prettier --write src/**/**/**/*.ts",
+    "build": "unbuild --minify",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write 'src/**/*.ts'",
     "clean": "rm -rf dist && rm -rf .tsbuildinfo",
     "prepublishOnly": "npm run clean && npm run build",
     "type-check": "tsc --noEmit",
@@ -66,17 +66,16 @@
   "homepage": "https://github.com/NeaByteLab/Ollama-Native#readme",
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@types/node": "^24.5.2",
-    "@typescript-eslint/eslint-plugin": "^8.44.1",
-    "@typescript-eslint/parser": "^8.44.1",
+    "@types/node": "^24.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-sonarjs": "^3.0.5",
     "prettier": "^3.6.2",
-    "terser": "^5.44.0",
-    "tsc-alias": "^1.8.16",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "unbuild": "^3.6.1"
   },
   "engines": {
     "node": ">=22.0.0"
